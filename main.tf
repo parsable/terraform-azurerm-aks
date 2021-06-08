@@ -1,11 +1,25 @@
-data "azurerm_resource_group" "main" {
-  name = var.resource_group_name
-}
 
 module "ssh-key" {
   source         = "./modules/ssh-key"
   public_ssh_key = var.public_ssh_key == "" ? "" : var.public_ssh_key
 }
+
+//resource "azurerm_private_dns_zone" "example" {
+//  name                = "privatelink.westus2.azmk8s.io"
+//  resource_group_name = azurerm_resource_group.example.name
+//}
+
+//resource "azurerm_user_assigned_identity" "example" {
+//  name                = "aks-example-identity"
+//  resource_group_name = data.azurerm_resource_group.main.name
+//  location            = data.azurerm_resource_group.main.location
+//}
+//
+//resource "azurerm_role_assignment" "example" {
+//  scope                = "/subscriptions/69df07ef-33cb-47b3-b7fc-39885eb723b5/resourceGroups/rg-analyze-vnet-001/providers/Microsoft.Network/privateDnsZones/privatelink.westus2.azmk8s.io" #azurerm_private_dns_zone.example.id
+//  role_definition_name = "Private DNS Zone Contributor"
+//  principal_id         = azurerm_user_assigned_identity.example.principal_id
+//}
 
 resource "azurerm_kubernetes_cluster" "main" {
   name                    = var.cluster_name == null ? "${var.prefix}-aks" : var.cluster_name
@@ -15,6 +29,11 @@ resource "azurerm_kubernetes_cluster" "main" {
   dns_prefix              = var.prefix
   sku_tier                = var.sku_tier
   private_cluster_enabled = var.private_cluster_enabled
+  private_dns_zone_id     = "/subscriptions/69df07ef-33cb-47b3-b7fc-39885eb723b5/resourceGroups/rg-analyze-vnet-001/providers/Microsoft.Network/privateDnsZones/privatelink.westus2.azmk8s.io"
+
+//  depends_on = [
+//    azurerm_role_assignment.example,
+//  ]
 
   linux_profile {
     admin_username = var.admin_username
@@ -33,7 +52,7 @@ resource "azurerm_kubernetes_cluster" "main" {
       node_count             = var.agents_count
       vm_size                = var.agents_size
       os_disk_size_gb        = var.os_disk_size_gb
-      vnet_subnet_id         = var.vnet_subnet_id
+      vnet_subnet_id         = var.vnet_subnet_id #data.azurerm_subnet.example.id
       enable_auto_scaling    = var.enable_auto_scaling
       max_count              = null
       min_count              = null
@@ -165,5 +184,3 @@ resource "azurerm_log_analytics_solution" "main" {
 
   tags = var.tags
 }
-
-

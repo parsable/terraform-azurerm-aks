@@ -289,3 +289,27 @@ variable "enable_host_encryption" {
   type        = bool
   default     = false
 }
+
+variable "azurerm_subnet_name" {
+  description = ""
+  type        = string
+  default     = ""
+}
+
+variable "azurerm_subnet_vnet_name" {
+  description = ""
+  type        = string
+  default     = ""
+}
+
+variable "azurerm_subnet_rg_name" {
+  description = ""
+  type        = string
+  default     = ""
+}
+
+//variable "private_dns_zone_id" {
+//  description = ""
+//  type        = string
+//  default     = ""
+//}
