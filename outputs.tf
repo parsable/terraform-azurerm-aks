@@ -1,3 +1,11 @@
+output "private_dns_zone_id" {
+  value = data.azurerm_private_dns_zone.default.id
+}
+
+output "private_dns_zone_name" {
+  value = data.azurerm_private_dns_zone.default.name
+}
+
 output "client_key" {
   value = azurerm_kubernetes_cluster.main.kube_config[0].client_key
 }
@@ -73,4 +81,20 @@ output "admin_username" {
 
 output "admin_password" {
   value = length(azurerm_kubernetes_cluster.main.kube_admin_config) > 0 ? azurerm_kubernetes_cluster.main.kube_admin_config.0.password : ""
+}
+
+output "uai_client_id" {
+  value = data.azurerm_user_assigned_identity.default.client_id
+}
+
+output "uai_principal_id" {
+  value = data.azurerm_user_assigned_identity.default.principal_id
+}
+
+output "virtual_network_id" {
+  value = data.azurerm_virtual_network.default.subnets
+}
+
+output "subnet_id" {
+  value = data.azurerm_subnet.default.id
 }

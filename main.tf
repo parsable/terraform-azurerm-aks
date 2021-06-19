@@ -1,39 +1,37 @@
+resource "azurerm_user_assigned_identity" "default" {
+  name                = var.user_assigned_identity_name
+  resource_group_name = data.azurerm_resource_group.main.name
+  location            = data.azurerm_resource_group.main.location
+}
+
+resource "azurerm_role_assignment" "default" {
+  scope                = data.azurerm_private_dns_zone.default.id
+  role_definition_name = "Private DNS Zone Contributor"
+  principal_id         = azurerm_user_assigned_identity.default.principal_id
+
+  timeouts {
+    create = "5m"
+    delete = "15m"
+  }
+}
 
 module "ssh-key" {
   source         = "./modules/ssh-key"
   public_ssh_key = var.public_ssh_key == "" ? "" : var.public_ssh_key
 }
 
-//resource "azurerm_private_dns_zone" "example" {
-//  name                = "privatelink.westus2.azmk8s.io"
-//  resource_group_name = azurerm_resource_group.example.name
-//}
 
-//resource "azurerm_user_assigned_identity" "example" {
-//  name                = "aks-example-identity"
-//  resource_group_name = data.azurerm_resource_group.main.name
-//  location            = data.azurerm_resource_group.main.location
-//}
-//
-//resource "azurerm_role_assignment" "example" {
-//  scope                = "/subscriptions/69df07ef-33cb-47b3-b7fc-39885eb723b5/resourceGroups/rg-analyze-vnet-001/providers/Microsoft.Network/privateDnsZones/privatelink.westus2.azmk8s.io" #azurerm_private_dns_zone.example.id
-//  role_definition_name = "Private DNS Zone Contributor"
-//  principal_id         = azurerm_user_assigned_identity.example.principal_id
-//}
 
 resource "azurerm_kubernetes_cluster" "main" {
-  name                    = var.cluster_name == null ? "${var.prefix}-aks" : var.cluster_name
+  name                    = var.cluster_name == null ? "${var.prefix_name}-aks" : var.cluster_name
   kubernetes_version      = var.kubernetes_version
   location                = data.azurerm_resource_group.main.location
   resource_group_name     = data.azurerm_resource_group.main.name
-  dns_prefix              = var.prefix
+  dns_prefix              = var.dns_prefix
   sku_tier                = var.sku_tier
   private_cluster_enabled = var.private_cluster_enabled
-  private_dns_zone_id     = "/subscriptions/69df07ef-33cb-47b3-b7fc-39885eb723b5/resourceGroups/rg-analyze-vnet-001/providers/Microsoft.Network/privateDnsZones/privatelink.westus2.azmk8s.io"
+  private_dns_zone_id     = data.azurerm_private_dns_zone.default.id
 
-//  depends_on = [
-//    azurerm_role_assignment.example,
-//  ]
 
   linux_profile {
     admin_username = var.admin_username
@@ -52,7 +50,7 @@ resource "azurerm_kubernetes_cluster" "main" {
       node_count             = var.agents_count
       vm_size                = var.agents_size
       os_disk_size_gb        = var.os_disk_size_gb
-      vnet_subnet_id         = var.vnet_subnet_id #data.azurerm_subnet.example.id
+      vnet_subnet_id         = data.azurerm_subnet.default.id
       enable_auto_scaling    = var.enable_auto_scaling
       max_count              = null
       min_count              = null
@@ -73,7 +71,7 @@ resource "azurerm_kubernetes_cluster" "main" {
       name                   = var.agents_pool_name
       vm_size                = var.agents_size
       os_disk_size_gb        = var.os_disk_size_gb
-      vnet_subnet_id         = var.vnet_subnet_id
+      vnet_subnet_id         = data.azurerm_subnet.default.id
       enable_auto_scaling    = var.enable_auto_scaling
       max_count              = var.agents_max_count
       min_count              = var.agents_min_count
@@ -99,7 +97,7 @@ resource "azurerm_kubernetes_cluster" "main" {
     for_each = var.client_id == "" || var.client_secret == "" ? ["identity"] : []
     content {
       type                      = var.identity_type
-      user_assigned_identity_id = var.user_assigned_identity_id
+      user_assigned_identity_id = azurerm_user_assigned_identity.default.id
     }
   }
 
@@ -155,12 +153,16 @@ resource "azurerm_kubernetes_cluster" "main" {
   }
 
   tags = var.tags
+
+  depends_on = [
+    azurerm_role_assignment.default
+  ]
 }
 
 
 resource "azurerm_log_analytics_workspace" "main" {
   count               = var.enable_log_analytics_workspace ? 1 : 0
-  name                = var.cluster_log_analytics_workspace_name == null ? "${var.prefix}-workspace" : var.cluster_log_analytics_workspace_name
+  name                = var.cluster_log_analytics_workspace_name == null ? "${var.prefix_name}-workspace" : var.cluster_log_analytics_workspace_name
   location            = data.azurerm_resource_group.main.location
   resource_group_name = var.resource_group_name
   sku                 = var.log_analytics_workspace_sku

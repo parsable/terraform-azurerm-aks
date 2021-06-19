@@ -15,7 +15,12 @@ variable "cluster_log_analytics_workspace_name" {
   default     = null
 }
 
-variable "prefix" {
+variable "prefix_name" {
+  description = "(Required) The prefix name for the resources created in the specified Azure Resource Group"
+  type        = string
+}
+
+variable "dns_prefix" {
   description = "(Required) The prefix for the resources created in the specified Azure Resource Group"
   type        = string
 }
@@ -78,12 +83,6 @@ variable "enable_log_analytics_workspace" {
   type        = bool
   description = "Enable the creation of azurerm_log_analytics_workspace and azurerm_log_analytics_solution or not"
   default     = true
-}
-
-variable "vnet_subnet_id" {
-  description = "(Optional) The ID of a Subnet where the Kubernetes Node Pool should exist. Changing this forces a new resource to be created."
-  type        = string
-  default     = null
 }
 
 variable "os_disk_size_gb" {
@@ -278,8 +277,8 @@ variable "identity_type" {
   default     = "SystemAssigned"
 }
 
-variable "user_assigned_identity_id" {
-  description = "(Optional) The ID of a user assigned identity."
+variable "user_assigned_identity_name" {
+  description = "(Optional) The name of a user assigned identity."
   type        = string
   default     = null
 }
@@ -290,26 +289,32 @@ variable "enable_host_encryption" {
   default     = false
 }
 
-variable "azurerm_subnet_name" {
-  description = ""
+variable "subnet_name" {
+  description = "The name of subnet."
   type        = string
   default     = ""
 }
 
-variable "azurerm_subnet_vnet_name" {
-  description = ""
+variable "vnet_name" {
+  description = "The name of the Virtual Network this Subnet is located within."
   type        = string
   default     = ""
 }
 
-variable "azurerm_subnet_rg_name" {
-  description = ""
+variable "vnet_rg_name" {
+  description = "The name of the resource group the Virtual Network is located in."
   type        = string
   default     = ""
 }
 
-//variable "private_dns_zone_id" {
-//  description = ""
-//  type        = string
-//  default     = ""
-//}
+variable "private_dns_zone_name" {
+  description = "Either the ID of Private DNS Zone which should be delegated to this Cluster, System to have AKS manage this or None. In case of None you will need to bring your own DNS server and set up resolving, otherwise cluster will have issues after provisioning."
+  type        = string
+  default     = ""
+}
+
+variable "private_dns_zone_rg_name" {
+  description = ""
+  type = string
+  default = ""
+}
