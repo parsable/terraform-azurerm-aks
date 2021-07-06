@@ -315,6 +315,6 @@ variable "private_dns_zone_name" {
 
 variable "private_dns_zone_rg_name" {
   description = ""
-  type = string
-  default = ""
+  type        = string
+  default     = ""
 }

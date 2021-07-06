@@ -15,6 +15,17 @@ resource "azurerm_role_assignment" "default" {
   }
 }
 
+resource "azurerm_role_assignment" "kubelet_identity" {
+  scope                = data.azurerm_resource_group.main.id
+  role_definition_name = "Private DNS Zone Contributor"
+  principal_id         = azurerm_kubernetes_cluster.main.kubelet_identity[0].object_id
+
+  timeouts {
+    create = "5m"
+    delete = "15m"
+  }
+}
+
 module "ssh-key" {
   source         = "./modules/ssh-key"
   public_ssh_key = var.public_ssh_key == "" ? "" : var.public_ssh_key
